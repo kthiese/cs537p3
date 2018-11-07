@@ -21,10 +21,15 @@ struct Command {
 	char** args;
 };
 
-struct Target* CreateTargets(char* fileName)
+struct Info** CreateTargets(char* fileName)
 {
 	// list of targets to return
-	struct Target* targetList;
+	struct Info** targetList;
+	targetList = (struct Info**) malloc (sizeof(struct Info));
+	
+
+	// number of targets
+	int numTargets = 0;
 	
 	// file pointer
 	FILE *ptr;
@@ -105,7 +110,14 @@ struct Target* CreateTargets(char* fileName)
 			// TODO: check for invalid line, if line is invalid print line #, line contents and stderror
 			if(arrayOfLines[i][0] == ' ')
 			{
-				printf("invalid line");
+				printf("invalid line: %d\n", i+1);
+				for(int j = 0; j < bufSize; j++)
+				{
+					if(arrayOfLines[i][j] == '\0')
+						break;
+					printf("%c",arrayOfLines[i][j]);
+				}
+				exit(1);
 			}
 
 			// either target line or command line
@@ -114,6 +126,9 @@ struct Target* CreateTargets(char* fileName)
 				// check if a target line
 				if(arrayOfLines[i][0] != '\t')
 				{
+
+
+					numTargets = numTargets + 1;
 					// TARGET name variables
 					char tempTargetName[bufSize];
 					memset(tempTargetName, 0, sizeof tempTargetName);
@@ -130,6 +145,7 @@ struct Target* CreateTargets(char* fileName)
 		
 						tempTargetName[j] = arrayOfLines[i][j];
 					}
+					
 				
 					// DEPENDENCIES variables
 					// get dependancies after target name
@@ -163,6 +179,7 @@ struct Target* CreateTargets(char* fileName)
 						}
 					}
 
+
 					// CMD variables
 					char tempCmdList[bufSize][bufSize];
 					memset(tempCmdList, 0, sizeof tempCmdList);
@@ -170,24 +187,51 @@ struct Target* CreateTargets(char* fileName)
 					int cCharIndex = 0;
 					int cNoIndex = 0;
 
-					// check if line imediately after targetline is cmdline, if so get cmdline broken by spaces
-					while(arrayOfLines[i+1][0] == '\t')
+					// check if line imediately after targetline is cmdline or blank or comment, if so get cmdline broken by spaces or skip
+					while(arrayOfLines[i+1][0] == '\t' || arrayOfLines[i+1][0] == '\n' || arrayOfLines[i+1][0] == '#')
 					{
-						int cCharIndex = 0;
-			
-						i = i + 1;
-			
-						for(int j = 1; j < bufSize; j++)
+						// next line is cmd line
+						if(arrayOfLines[i+1][0] == '\t')
 						{
-							tempCmdList[cNoIndex][cCharIndex] = arrayOfLines[i][j];
-							cCharIndex = cCharIndex + 1;
+							int cCharIndex = 0;
+			
+							i = i + 1;
+			
+							for(int j = 1; j < bufSize; j++)
+							{
+								tempCmdList[cNoIndex][cCharIndex] = arrayOfLines[i][j];
+								cCharIndex = cCharIndex + 1;
+							}
+							
+							cNoIndex = cNoIndex + 1;
+							noCmds = cNoIndex;
 						}
-						
-						cNoIndex = cNoIndex + 1;
-						noCmds = cNoIndex;
+						else
+						{
+							i = i + 1;
+						}
 					}
 
+					// realloc space for targetList
+					targetList = realloc(targetList, numTargets*sizeof(struct Info));
+
+					//TODO: add Info struct to target list
+
+					// create Info struct to hold data
+					struct Info * target1;
+					target1 = malloc(sizeof(struct Info));
+
+					// set target name in target info struct
+					target1->target = tempTargetName;
+
+					// set number of DEPENDENCES
+					target1->dpsize = noDeps;
+					
+					// add target to list
+					*(targetList + numTargets * sizeof(struct Info)) = target1;
+
 					// TESTING PARSER SO FAR
+					/*
 					printf("target: ");
 					for(int j = 0; j < targetNameLength; j++)
 					{
@@ -217,21 +261,32 @@ struct Target* CreateTargets(char* fileName)
 						}
 						//printf("\n");
 					}
+					*/
 					// END PARSER TESTING
 				}
 
 				else // line is not a target line
 				{
 					// TODO: print error b/c make file must begin with target line
+					printf("make must begin with target line");
+					exit(1);
 				}
 			}
 		}
 	}
-
+	printf("numTargets: %d", numTargets);
 }
 
 int main()
 {
-	CreateTargets("make");
+
+	struct Info** list = CreateTargets("make");
+	struct Info* list1 = *list;
+	
+// = CreateTargets("make");
+
+	//for(int i = 0; i < 1)
+	printf("%s",list1->target);
+	
 }
 
