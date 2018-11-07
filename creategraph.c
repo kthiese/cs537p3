@@ -1,23 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "graph.h"
 
 // Constructs the graph
-int createGraph(Info** targets, int tsize) {
+int createGraph(struct Info** targets, int tsize) {
 	struct NodeList* graph = createList(tsize);
 	
 	// Add each target to graph, making a linked list of the targets
 	for (int i = 0; i < tsize; i++) {
+		if (findTarget(graph, targets[i]->target) != NULL) {
+			fprintf(stderr, "ERROR: Target '%s' is listed multiple times.\n", targets[i]->target);
+			return 1;
+		}	
 		addTarget(graph, targets[i]);
 	}
 
-	// For each node in the graph, add the children.
+	// For each node in the graph, 
 	struct Node* curr = graph->head;
 	int v = 0;
-	for (i = 0; i < tsize; i++) {
+	for (int i = 0; i < tsize; i++) {
 		curr = curr->next;
-		curr->children = (struct Node *)malloc(sizeof(struct Node*) * curr->info->dpssize);
+		// Allocated memory for the children, and for each dependency
+		curr->children = (struct Node **)malloc(sizeof(struct Node*) * curr->info->dpsize);
 		for (int j = 0; j < curr->info->dpsize; j++){
+			// Check if the file is also a target, and add it to the children.
 			for (int k = 0; k < tsize; k++) {
 				if (k == i){
 					continue;
@@ -29,22 +36,33 @@ int createGraph(Info** targets, int tsize) {
 		v = 0;
 	}
 
-//	// For each target
-//	for (int i = 0; i < tsize; i++){
-//		// check if one of the dependencies
-//		for (int j = 0; j < targets[i]->dpsize; j++) {
-//		       // is also a target. If yes, then add an edge from that
-//		       // target to that 'dependency' (which is actually another target)
-//			for (int k = 0; k < tsize; k++) {
-//				if (k == i) {
-//					continue;
-//				} else if (strcmp(targets[k].target, targets[i]->dps[j]) == 0) {
-//					addEdge(graph, i, targets[k]);
-//				}
-//		       }
-//		}	       
-//	}
+	if (containsCycle(graph) == 1) {
+		fprintf(stderr, "ERROR: Makefile contains a cycle.\n");
+		return 1;
+	}
+
 	
 	// Pass the graph to actually run the makefile. 
-	runMake(graph);
+//	runMake(graph);
+
+	curr = graph->head;
+	for (int i = 0; i < tsize; i++) {
+		curr = curr->next;
+		printf("%s: ", curr->info->target);
+		for (int j = 0; j < curr->info->dpsize; j++) {
+			printf("%s ", curr->info->dps[j]);
+		}
+		printf("\n\tChildren: ");
+		for (int j = 0; j < curr->info->dpsize; j++) {
+			if (curr->children[j] == NULL) {
+				break;
+			} else {
+				printf("%s ", curr->children[j]->info->target);
+			}
+		}
+		printf("\n");
+	}
+
+	return 0;
 }
+

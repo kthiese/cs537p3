@@ -1,37 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-// Struct that holds the targets
-struct Info {
-	int dpsize;
-	char* target;
-	struct Command* cmds;
-	char** dps;
-}
-
-// Struct that holds a command
-struct Command {
-	char* cmd;
-	char** args;
-}
-
-// Struct for a node in the graph, holding a target and the next node
-struct Node {
-	struct Info* info;
-	struct Node** children;
-	struct Node* next;
-}
-
-// List of nodes for the graph
-struct NodeList {
-	int size;
-	struct Node *head;
-}
+#include "graph.h"
 
 // Create a node given the info struct
-struct Node* createNode(struct * Info info) {
-	struct Node* newNode = (struct Node*)malloc(sizeof(struct Node*));
+struct Node* createNode(struct Info* info) {
+	struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
 	newNode->info = info;
 	newNode->children = NULL;
 	newNode->next = NULL;
@@ -40,16 +14,17 @@ struct Node* createNode(struct * Info info) {
 
 // Create a list
 struct NodeList* createList(int tsize){
-	struct NodeList* newlist = (struct NodeList*)malloc(sizeof(struct NodeList*));
+	struct NodeList* newlist = (struct NodeList*)malloc(sizeof(struct NodeList));
+	newlist->size = tsize;
+	newlist->head = (struct Node*)malloc(sizeof(struct Node));
 	newlist->head->info = NULL;
 	newlist->head->children = NULL;
-	newlist->head->next=NULL;
-	newlist->size = tsize;
+	newlist->head->next = NULL;
 	return newlist;
 }
 
 // Add target to list
-void addTarget(struct NodeList* list, Info* info){
+void addTarget(struct NodeList* list, struct Info* info){
 	struct Node* curr = list->head;
 	while (curr->next != NULL) {
 		curr = curr->next;	
@@ -61,33 +36,53 @@ void addTarget(struct NodeList* list, Info* info){
 // Finds a node with target name parameter
 struct Node* findTarget(struct NodeList* list, char* target) {
 	struct Node* curr = list->head;
-	while (curr->next != NULL && strcmp(curr->next->info->target, target) !- 0) {
-		curr = curr_.next;
+	while (curr->next != NULL && strcmp(curr->next->info->target, target) != 0) {
+		curr = curr->next;
 	}
 	return curr->next;
 }
 
-// Graph struct holding multiple list of nodes
-//struct Graph{
-//	int size;
-//	struct NodeList* list;
-//}
+int containsCycle(struct NodeList* graph) {
+	int size = graph->size;
+	struct NodeList* visited = createList(size);
+	struct NodeList* rec = createList(size);
+	struct Node* curr = graph->head->next;
+	
+	for (int i = 0; i < size; i++) {
+		if (isCycle(graph, curr, visited, rec) == 1) {
+			return 1;
+		}
+		curr = curr->next;
+	}
+	return 0;
+}
 
-// Initialize graph
-//struct Graph* createGraph(int size) {
-//	struct Graph *graph  = (struct Graph*)malloc(sizeof(struct * Graph));
-//	graph->size = size;
-//	graph->list = (struct NodeList*)malloc(size*sizeof(struct NodeList*));
-//	for (int i = 0; i < size; i++){
-//		graph->list[i].head = NULL;
-//	}
-//
-//	return graph;
-//}
+int isCycle(struct NodeList* graph, struct Node* node, struct NodeList* visited, struct NodeList* rec) {
+	if (findTarget(rec, node->info->target) != NULL) 
+		return 1;
 
-// Add an edge between a target and another target in the graph. 
-//void addEdge(struct Graph*, int src, struct Info* info) {
-//	struct Node* newNode = createNode(info);
-//	newNode->next = graph->list[src].head;
-//	graph->list[src].head = newNode;
-//}
+	if (findTarget(visited, node->info->target) != NULL) 
+		return 0;
+	
+	addTarget(visited, node->info);
+	addTarget(rec, node->info);
+	for (int i = 0; i < node->info->dpsize; i++) {
+		if (node->children[i] != NULL) {
+			if ( isCycle(graph, node->children[i], visited, rec) == 1){
+			       return 1;
+			}
+		} else {
+			break;
+		}			
+	}
+	
+	struct Node* reccurr = rec->head;
+	while (strcmp(reccurr->next->info->target, node->info->target) != 0)
+		reccurr = reccurr->next;
+	
+	struct Node* temp = reccurr->next;
+	reccurr->next = temp->next;	
+
+	return 0;
+
+}
