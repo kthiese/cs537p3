@@ -25,7 +25,7 @@ struct Info** CreateTargets(char* fileName)
 {
 	// list of targets to return
 	struct Info** targetList;
-	targetList = (struct Info**) malloc (sizeof(struct Info));
+	targetList = (struct Info**) malloc (sizeof(struct Info**));
 	
 
 	// number of targets
@@ -213,7 +213,7 @@ struct Info** CreateTargets(char* fileName)
 					}
 
 					// realloc space for targetList
-					targetList = realloc(targetList, numTargets*sizeof(struct Info));
+					targetList = realloc(targetList, numTargets*sizeof(struct Info**));
 
 					//TODO: add Info struct to target list
 
@@ -280,13 +280,11 @@ struct Info** CreateTargets(char* fileName)
 int main()
 {
 
-	struct Info** list = CreateTargets("make");
-	struct Info* list1 = *list;
-	
-// = CreateTargets("make");
+	struct Info** list = (struct Info**)malloc(sizeof(struct Info**));
+	list = CreateTargets("make");
 
-	//for(int i = 0; i < 1)
-	printf("%s",list1->target);
+	printf("%s", list[0]->target);
+	
 	
 }
 
