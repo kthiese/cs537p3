@@ -8,13 +8,14 @@ struct Info {
         int dpsize;
 	int cmdsize;
         char* target;
-        struct Command* cmds;
+        struct Command** cmds;
         char** dps;
 };
 
 // Struct that holds a command
 struct Command {
         char* cmd;
+	int argsize;
         char** args;
 };
 

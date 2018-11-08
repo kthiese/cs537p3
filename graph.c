@@ -12,7 +12,7 @@ struct Node* createNode(struct Info* info) {
 	return newNode;
 }
 
-// Create a list
+// Create a LinkedList (which will become a graph)
 struct NodeList* createList(int tsize){
 	struct NodeList* newlist = (struct NodeList*)malloc(sizeof(struct NodeList));
 	newlist->size = tsize;
@@ -23,7 +23,7 @@ struct NodeList* createList(int tsize){
 	return newlist;
 }
 
-// Add target to list
+// Add target to the LinkedList
 void addTarget(struct NodeList* list, struct Info* info){
 	struct Node* curr = list->head;
 	while (curr->next != NULL) {
@@ -33,7 +33,7 @@ void addTarget(struct NodeList* list, struct Info* info){
 	curr->next = newnode;
 }
 
-// Finds a node with target name parameter
+// Finds a node with target name parameter in the LinkedList
 struct Node* findTarget(struct NodeList* list, char* target) {
 	struct Node* curr = list->head;
 	while (curr->next != NULL && strcmp(curr->next->info->target, target) != 0) {
@@ -42,6 +42,8 @@ struct Node* findTarget(struct NodeList* list, char* target) {
 	return curr->next;
 }
 
+// Called after creating the graph to check for cycles
+// 1 - there is a cycle, 0 - no cycle.
 int containsCycle(struct NodeList* graph) {
 	int size = graph->size;
 	struct NodeList* visited = createList(size);
@@ -57,6 +59,7 @@ int containsCycle(struct NodeList* graph) {
 	return 0;
 }
 
+// Called for each node in the graph to check for cycles 
 int isCycle(struct NodeList* graph, struct Node* node, struct NodeList* visited, struct NodeList* rec) {
 	if (findTarget(rec, node->info->target) != NULL) 
 		return 1;
