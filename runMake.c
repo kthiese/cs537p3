@@ -23,19 +23,14 @@ void runMake(struct NodeList* graph, char* makeTarget) {
 	}
 
 	struct NodeList* visited = createList(size);
-//	printf("HELLO! IN RUNMAKE!\n");
 	run(graph, curr, visited);
 }
 
 // Recursive function for running make
 void run(struct NodeList* graph, struct Node* curr, struct NodeList* visited) {
 	addTarget(visited, curr->info);
-//	printf("IN RUN!\n");
-//	printf("%s\n", curr->info->target);
 	for (int i = 0; i < curr->numchild; i++) {
-//		       	printf("Child of %s: %s\n", curr->info->target,curr->children[i]->info->target);
 			if (findTarget(visited, curr->children[i]->info->target) != NULL) {
-//				printf("%s found in VISITED LIST!\n", curr->children[i]->info->target);
 			} else {
 				run(graph, curr->children[i], visited);
 
@@ -43,9 +38,7 @@ void run(struct NodeList* graph, struct Node* curr, struct NodeList* visited) {
 	}	
 	struct stat target;
 	struct stat dp;
-//	target = malloc(sizeof(struct stat));
-//	dp = malloc(sizeof(struct stat));
-	// Check for each dependency of a target . . .
+	// Check for each dependency of a target, check the modifcation time.
 	if (curr->info->dpsize != 0) {
 		for (int i = 0; i < curr->info->dpsize; i++) {
 			if (stat(curr->info->dps[i], &dp) != 0) {
@@ -58,21 +51,24 @@ void run(struct NodeList* graph, struct Node* curr, struct NodeList* visited) {
 				}
 			} 
 			if (stat(curr->info->target, &target) != 0 || (curr->info->cmdsize != 0 && difftime(dp.st_mtime, target.st_mtime) > 0)) {
-//				printf("RUNNING COMMANDS\n");
 				pid_t child_pid;
 				int child_status;
 				for (int j = 0; j < curr->info->cmdsize; j++) {
 					if (curr->info->cmds[j]->cmd != NULL) {
 						child_pid = fork();
-						if (child_pid == 0) {
+						if (child_pid == -1) {
+							fprintf(stderr, "ERROR: Could not fork child.\n");
+							exit(1);
+						}
+						else if (child_pid == 0) {
 							for (int k = 0; k < curr->info->cmds[j]->argsize-1; k++) {
 								printf("%s ", curr->info->cmds[j]->args[k]);
 							}
 							printf("\n");
-							if (execvp(curr->info->cmds[j]->cmd, curr->info->cmds[j]->args) != 0){
-								fprintf(stderr, "ERROR: Command failed.\n");
-								exit(0);
-							}
+							execvp(curr->info->cmds[j]->cmd, curr->info->cmds[j]->args);
+							fprintf(stderr, "ERROR: Command failed.\n");
+							exit(0);
+							
 						} else {
 							pid_t tpid; 
 							do {
@@ -83,24 +79,27 @@ void run(struct NodeList* graph, struct Node* curr, struct NodeList* visited) {
 				}
 			}
 		}
-//		free(dp);
-//		free(target);
-	} else {
+	} else 
+	// If no dependencies, we can just automatically run the commands. 
+	{
 		pid_t child_pid;
 		int child_status;
 		for (int j = 0; j < curr->info->cmdsize; j++) {
 			if (curr->info->cmds[j]->cmd != NULL) {
 				child_pid = fork();
-				if (child_pid == 0) {
-	//				printf("'%s'\n", curr->info->cmds[j]->cmd);
+				if (child_pid == -1) {
+					fprintf(stderr, "ERROR: Could not fork child.\n");
+					exit(1);
+				}
+				else if (child_pid == 0) {
 					for (int k = 0; k < curr->info->cmds[j]->argsize-1; k++) {
 						printf("%s ", curr->info->cmds[j]->args[k]);
 					}
 					printf("\n");
-					if (execvp(curr->info->cmds[j]->cmd, curr->info->cmds[j]->args) != 0){
-						fprintf(stderr, "ERROR: Command failed.\n");
-						exit(1);
-					}
+					execvp(curr->info->cmds[j]->cmd, curr->info->cmds[j]->args);
+					fprintf(stderr, "ERROR: Command failed.\n");
+					exit(1);
+
 				} else {
 					pid_t tpid; 
 					do {
@@ -111,4 +110,3 @@ void run(struct NodeList* graph, struct Node* curr, struct NodeList* visited) {
 		}
 	}
 }
-	

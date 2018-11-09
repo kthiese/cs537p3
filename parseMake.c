@@ -1,5 +1,6 @@
 // Alec Scheele
 // Kathryn Thiese
+
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,10 +35,8 @@ struct Info** CreateTargets(char* fileName)
 	{
 		if ((ptr = fopen("Makefile", "r")) == NULL){
 			// if cannot open file, print error and exit
-			fprintf(stderr, "ERROR: Error opening file");
-
+			fprintf(stderr, "ERROR: Cannot open file.\n");
 			exit(1);
-
 		}
 	} 
 
@@ -52,7 +51,7 @@ struct Info** CreateTargets(char* fileName)
 			if (charNo < bufSize) {
 				arrayOfLines[lineNo][charNo++] = c;
 			} else {
-				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo);	
+				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo+1);	
 				exit(1);
 			}
 		} else if (c == '\n') {
@@ -61,7 +60,7 @@ struct Info** CreateTargets(char* fileName)
 				lineNo++;
 				charNo = 0;
 			} else {
-				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo);
+				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo+1);
 				exit(1);	
 			}
 		} else if (c == EOF) {
@@ -112,7 +111,6 @@ struct Info** CreateTargets(char* fileName)
 						fprintf(stderr, "ERROR: Line %i does not start with a tab, so it should be a target line.\n", i+1);
 						exit(1);
 					}
-//					printf("size of targetname: %i\n", targetNameLength);
 
 					// get TARGET NAME : iterate through each character in the line until colon is reached and set target name
 					for(int j = 0; j < bufSize; j++)
@@ -121,10 +119,8 @@ struct Info** CreateTargets(char* fileName)
 						{
 							break;
 						}
-//						printf("%c", arrayOfLines[i][j]);	
 						tempTargetName[j] = arrayOfLines[i][j];
 					}
-//					printf("\n");
 					
 					// Trim trailing whitespace
 					char* end = tempTargetName + strlen(tempTargetName) - 1;
@@ -133,7 +129,6 @@ struct Info** CreateTargets(char* fileName)
 
 					// Set target name in struct Info.
 					tempTarget->target = tempTargetName;
-//					printf("%s\n", tempTargetName);
 					// DEPENDENCIES variables
 					// get dependancies after target name
 					char** tempDepList = (char**)malloc(sizeof(char*)*bufSize);
@@ -154,7 +149,6 @@ struct Info** CreateTargets(char* fileName)
 							tempDeps[dCharIndex++] = arrayOfLines[i][j];
 						}
 					}
-//					printf("%s", tempDeps);
 					char *sdeps = strtok(tempDeps, " ");
 					int count = 0;
 					while (sdeps != NULL){
@@ -170,12 +164,15 @@ struct Info** CreateTargets(char* fileName)
 					for (int k = 0; k < bufSize; k++) {
 						tempCmdList[k] = (char*)malloc(bufSize*sizeof(char));
 					}
-//					int cCharIndex = 0;
 					int cNoIndex = 0;
 
 					// check if line imediately after targetline is cmdline, if so get cmdline broken by spaces
-					while(arrayOfLines[i+1][0] == '\t')
+					while(arrayOfLines[i+1][0] == '\t' || arrayOfLines[i+1][0] == '\n')
 					{
+						if (arrayOfLines[i+1][0] == '\n') {
+							i = i+1;
+							continue;
+						}
 						int cCharIndex = 0;
 			
 						i = i + 1;
@@ -209,14 +206,6 @@ struct Info** CreateTargets(char* fileName)
 							tempTarget->cmds[k]->args[l] = tempArgs[l];
 						}
 						tempTarget->cmds[k]->cmd = *tempArgs;
-//						cptr = strchr(tempCmdList[k], ' ');
-//						if (cptr) {
-//							int cmdLength = (cptr-tempCmdList[k])+1;
-//							tempTarget->cmds[k]->cmd = (char*)malloc(sizeof(char)*cmdLength+1);
-//							for (int l = 0; l < cmdLength; l++) {
-//								tempTarget->cmds[k]->cmd[l] = tempCmdList[k][l];
-//							}
-//						}
 					}
 					targetList[tsize++] = tempTarget;
 				}
@@ -234,63 +223,51 @@ struct Info** CreateTargets(char* fileName)
 
 int main(int argc, char* argv[])
 {
-	// adding support for -f
 	int f = 0;
 	int opt = 0;
-	if((opt = getopt(argc, argv, "f:")) != -1)
+	if ((opt = getopt(argc, argv, "f:")) != -1) 
 	{
 		f = 1;
 		switch(opt)
 		{
 			case 'f':
-			printf("%d",argc);
-			printf("f flag used \n");
-			printf("%s", optarg);
+				if (argc > 4)
+				{
+					fprintf(stderr, "ERROR: Too many arguments for 'make'.\n");
+					exit(1);
+				}
 
-			if (argc > 4) 
-			{
-				fprintf(stderr, "ERROR: too many arguments\n");
-				exit(1);
-			}
-	
-
-			struct Info** targetList = CreateTargets(optarg);
-
-			if (argc == 3) 
-			{
-				createGraph(targetList, tsize, "");
-			} 
-			else 
-			{
-				createGraph(targetList, tsize, argv[3]);
-			}
+				struct Info** targetList = CreateTargets(optarg);
 				
+				if (argc == 3)
+				{
+					createGraph(targetList, tsize, "");
+				}
+				else
+				{
+					createGraph(targetList, tsize, argv[3]);
+				}
 		}
 	}
-	// if -f is not used
-	if(f == 0)
+
+	if (f == 0)
 	{
-		if (argc > 2) 
+		if (argc > 2)
 		{
 			fprintf(stderr, "ERROR: 'make' only takes one or zero arguments.\n");
 			exit(1);
 		}
-	
 
 		struct Info** targetList = CreateTargets("makefile");
 
 		if (argc == 1) 
 		{
 			createGraph(targetList, tsize, "");
-		} 
-		else 
+		}
+		else
 		{
 			createGraph(targetList, tsize, argv[1]);
 		}
 	}
-	
-	// END of -f additions
-
-
 }
 
