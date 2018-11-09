@@ -56,23 +56,23 @@ void createGraph(struct Info** targets, int tsize, char* makeTarget) {
 
 
 //	Testing 
-	curr = graph->head;
-	for (int i = 0; i < tsize; i++) {
-		curr = curr->next;
-		printf("%s: ", curr->info->target);
-		for (int j = 0; j < curr->info->dpsize; j++) {
-			printf("%s ", curr->info->dps[j]);
-		}
-		printf("\n\tChildren: %i ", curr->numchild);
-		for (int j = 0; j < curr->info->dpsize; j++) {
-			if (curr->children[j] == NULL) {
-				break;
-			} else {
-				printf("%s ", curr->children[j]->info->target);
-			}
-		}
-		printf("\n");
-	}
+//	curr = graph->head;
+//	for (int i = 0; i < tsize; i++) {
+//		curr = curr->next;
+//		printf("%s: ", curr->info->target);
+//		for (int j = 0; j < curr->info->dpsize; j++) {
+//			printf("%s ", curr->info->dps[j]);
+//		}
+//		printf("\n\tChildren: %i ", curr->numchild);
+//		for (int j = 0; j < curr->info->dpsize; j++) {
+//			if (curr->children[j] == NULL) {
+//				break;
+//			} else {
+//				printf("%s ", curr->children[j]->info->target);
+//			}
+//		}
+//		printf("\n");
+//	}
 	
 	// Pass the graph to actually run the makefile. 
 	runMake(graph, makeTarget);
