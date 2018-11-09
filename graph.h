@@ -22,6 +22,7 @@ struct Command {
 // Struct for a node in the graph, holding a target and the next node
 struct Node {
         struct Info* info;
+	int numchild;
         struct Node** children;
         struct Node* next;
 };

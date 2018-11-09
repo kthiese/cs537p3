@@ -1,3 +1,6 @@
+// Alec Scheele
+// Kathryn Thiese
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,12 +29,12 @@ struct Info** CreateTargets(char* fileName)
 		arrayOfLines[i] = (char *)malloc(sizeof(char)*bufSize);
 	}
 	
+	// Open file
 	if ((ptr = fopen(fileName, "r")) == NULL)
 	{
 		if ((ptr = fopen("Makefile", "r")) == NULL){
 			// if cannot open file, print error and exit
-			printf("Error opening file");
-
+			fprintf(stderr, "ERROR: Error opening file");
 			exit(1);
 		}
 	} 
@@ -40,7 +43,7 @@ struct Info** CreateTargets(char* fileName)
 	int lineNo = 0;
 	int charNo = 0;
 
-	do // reading contents of file line by line
+	do // reading contents of file line by line, checking line length
 	{
 		c = fgetc(ptr);
 		if (c != '\n' && c != EOF) {
@@ -48,6 +51,7 @@ struct Info** CreateTargets(char* fileName)
 				arrayOfLines[lineNo][charNo++] = c;
 			} else {
 				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo);	
+				exit(1);
 			}
 		} else if (c == '\n') {
 			if (charNo < bufSize) {
@@ -55,7 +59,8 @@ struct Info** CreateTargets(char* fileName)
 				lineNo++;
 				charNo = 0;
 			} else {
-				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo);	
+				fprintf(stderr, "ERROR: Line %i is too long.\n", lineNo);
+				exit(1);	
 			}
 		} else if (c == EOF) {
 			break;
@@ -103,10 +108,9 @@ struct Info** CreateTargets(char* fileName)
 						memset(tempTargetName, 0, targetNameLength+1);
 					} else {
 						fprintf(stderr, "ERROR: Line %i does not start with a tab, so it should be a target line.\n", i);
-						fprintf(stderr, "'%s'\n", arrayOfLines[i]);
 						exit(1);
 					}
-					printf("size of targetname: %i\n", targetNameLength);
+//					printf("size of targetname: %i\n", targetNameLength);
 
 					// get TARGET NAME : iterate through each character in the line until colon is reached and set target name
 					for(int j = 0; j < bufSize; j++)
@@ -115,10 +119,10 @@ struct Info** CreateTargets(char* fileName)
 						{
 							break;
 						}
-						printf("%c", arrayOfLines[i][j]);	
+//						printf("%c", arrayOfLines[i][j]);	
 						tempTargetName[j] = arrayOfLines[i][j];
 					}
-					printf("\n");
+//					printf("\n");
 					
 					// Trim trailing whitespace
 					char* end = tempTargetName + strlen(tempTargetName) - 1;
@@ -127,7 +131,7 @@ struct Info** CreateTargets(char* fileName)
 
 					// Set target name in struct Info.
 					tempTarget->target = tempTargetName;
-					printf("%s\n", tempTargetName);
+//					printf("%s\n", tempTargetName);
 					// DEPENDENCIES variables
 					// get dependancies after target name
 					char** tempDepList = (char**)malloc(sizeof(char*)*bufSize);
@@ -148,7 +152,7 @@ struct Info** CreateTargets(char* fileName)
 							tempDeps[dCharIndex++] = arrayOfLines[i][j];
 						}
 					}
-					printf("%s", tempDeps);
+//					printf("%s", tempDeps);
 					char *sdeps = strtok(tempDeps, " ");
 					int count = 0;
 					while (sdeps != NULL){
@@ -164,7 +168,7 @@ struct Info** CreateTargets(char* fileName)
 					for (int k = 0; k < bufSize; k++) {
 						tempCmdList[k] = (char*)malloc(bufSize*sizeof(char));
 					}
-					int cCharIndex = 0;
+//					int cCharIndex = 0;
 					int cNoIndex = 0;
 
 					// check if line imediately after targetline is cmdline, if so get cmdline broken by spaces
@@ -196,19 +200,21 @@ struct Info** CreateTargets(char* fileName)
 							tempArgs[count++] = sargs;
 							sargs = strtok(NULL, " ");
 						}
+						tempArgs[count++] = '\0';
 						tempTarget->cmds[k]->args = (char **)malloc(sizeof(char*)*bufSize);
 						tempTarget->cmds[k]->argsize = count;
 						for (int l = 0; l < count; l++) {
 							tempTarget->cmds[k]->args[l] = tempArgs[l];
 						}
-						cptr = strchr(tempCmdList[k], ' ');
-						if (cptr) {
-							int cmdLength = (cptr-tempCmdList[k])+1;
-							tempTarget->cmds[k]->cmd = (char*)malloc(sizeof(char)*cmdLength+1);
-							for (int l = 0; l < cmdLength; l++) {
-								tempTarget->cmds[k]->cmd[l] = tempCmdList[k][l];
-							}
-						}
+						tempTarget->cmds[k]->cmd = *tempArgs;
+//						cptr = strchr(tempCmdList[k], ' ');
+//						if (cptr) {
+//							int cmdLength = (cptr-tempCmdList[k])+1;
+//							tempTarget->cmds[k]->cmd = (char*)malloc(sizeof(char)*cmdLength+1);
+//							for (int l = 0; l < cmdLength; l++) {
+//								tempTarget->cmds[k]->cmd[l] = tempCmdList[k][l];
+//							}
+//						}
 					}
 					targetList[tsize++] = tempTarget;
 				}
@@ -216,7 +222,6 @@ struct Info** CreateTargets(char* fileName)
 				else // line is not a target line
 				{
 					fprintf(stderr, "Line %i is not a target line when it should be.\n", i);
-					fprintf(stderr, "'%s'\n", arrayOfLines[i]);
 					exit(1);
 				}
 			}
@@ -225,27 +230,38 @@ struct Info** CreateTargets(char* fileName)
 	return targetList;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	struct Info** targetList = CreateTargets("makefile");
-	printf("%i", tsize);
-	for (int i = 0; i < tsize; i++) {
-		printf("Target: %s\n", targetList[i]->target);
-		printf("\tDependencies: ");
-		printf("%i ", targetList[i]->dpsize);
-		for (int j = 0; j < targetList[i]->dpsize; j++) {
-			printf("%s ", targetList[i]->dps[j]);
-		}
-		printf("\n\tCommands: %i ", targetList[i]->cmdsize);
-		for (int j = 0; j < targetList[i]->cmdsize; j++) {
-			for (int k = 0; k < targetList[i]->cmds[j]->argsize; k++) {
-				printf("%s ", targetList[i]->cmds[j]->args[k]);
-			}
-			printf("\n\t");
-		}
-		printf("\n");
+	if (argc > 2) {
+		fprintf(stderr, "ERROR: 'make' only takes one or zero arguments.\n");
+		exit(1);
 	}
-	createGraph(targetList, tsize);
+	struct Info** targetList = CreateTargets("makefile");
+//	printf("%i", tsize);
+//	for (int i = 0; i < tsize; i++) {
+//		printf("Target: %s\n", targetList[i]->target);
+//		printf("\tDependencies: ");
+//		printf("%i ", targetList[i]->dpsize);
+//		for (int j = 0; j < targetList[i]->dpsize; j++) {
+//			printf("%s ", targetList[i]->dps[j]);
+//		}
+//		printf("\n\tCommands: %i ", targetList[i]->cmdsize);
+//		for (int j = 0; j < targetList[i]->cmdsize; j++) {
+//			printf("ARGSIZE: %i CMD: ", targetList[i]->cmds[j]->argsize);
+//			for (int k = 0; k < targetList[i]->cmds[j]->argsize; k++) {
+//				printf("%s ", targetList[i]->cmds[j]->args[k]);
+//			}
+//			printf("\n\t");
+//		}
+//		printf("\n");
+//	}
+
+	if (argc == 1) {
+		createGraph(targetList, tsize, "");
+	} else {
+		printf("ARGUMENT: %s\n", argv[1]);
+		createGraph(targetList, tsize, argv[1]);
+	}
 
 }
 

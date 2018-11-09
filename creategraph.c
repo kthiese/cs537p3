@@ -1,3 +1,6 @@
+// Alec Scheele
+// Kathryn Thiese
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +8,7 @@
 #include "runMake.h"
 
 // Constructs the graph
-void createGraph(struct Info** targets, int tsize) {
+void createGraph(struct Info** targets, int tsize, char* makeTarget) {
 	struct NodeList* graph = createList(tsize);
 	
 	// Add each target to graph, making a linked list of the targets
@@ -16,6 +19,11 @@ void createGraph(struct Info** targets, int tsize) {
 			exit(1);
 		}	
 		addTarget(graph, targets[i]);
+	}
+	
+	if (strcmp(makeTarget, "") != 0 && findTarget(graph, makeTarget) == NULL){
+		fprintf(stderr, "ERROR: '%s' is not a target in the makefile.\n", makeTarget);
+		exit(1);	
 	}
 
 	// For each node in the graph . . . 
@@ -35,6 +43,7 @@ void createGraph(struct Info** targets, int tsize) {
 				}
 			}
 		}
+		curr->numchild = v;
 		v = 0;
 	}
 	
@@ -54,7 +63,7 @@ void createGraph(struct Info** targets, int tsize) {
 		for (int j = 0; j < curr->info->dpsize; j++) {
 			printf("%s ", curr->info->dps[j]);
 		}
-		printf("\n\tChildren: ");
+		printf("\n\tChildren: %i ", curr->numchild);
 		for (int j = 0; j < curr->info->dpsize; j++) {
 			if (curr->children[j] == NULL) {
 				break;
@@ -66,6 +75,6 @@ void createGraph(struct Info** targets, int tsize) {
 	}
 	
 	// Pass the graph to actually run the makefile. 
-	runMake(graph);
+	runMake(graph, makeTarget);
 }
 

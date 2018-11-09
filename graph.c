@@ -1,3 +1,6 @@
+// Alec Scheele
+// Kathryn Thiese
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,10 +55,14 @@ int containsCycle(struct NodeList* graph) {
 	
 	for (int i = 0; i < size; i++) {
 		if (isCycle(graph, curr, visited, rec) == 1) {
+			free(visited);
+			free(rec);
 			return 1;
 		}
 		curr = curr->next;
 	}
+	free(visited);
+	free(rec);
 	return 0;
 }
 
@@ -78,7 +85,6 @@ int isCycle(struct NodeList* graph, struct Node* node, struct NodeList* visited,
 			break;
 		}			
 	}
-	
 	struct Node* reccurr = rec->head;
 	while (strcmp(reccurr->next->info->target, node->info->target) != 0)
 		reccurr = reccurr->next;

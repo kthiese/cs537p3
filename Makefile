@@ -1,9 +1,12 @@
+# Alec Scheele
+# Kathryn Thiese
+
 CC=gcc
 CFLAGS=-Wall -Wextra
 SCAN_BUILD_DIR = scan-build-out
 
 537make:  graph.o parseMake.o creategraph.o runMake.o
-	$(CC) $(CFLAGS) *.o -o 537make
+	$(CC) $(CFLAGS) *.o -o 537make -lpthread
 
 graph.o: graph.c
 	$(CC) $(CFLAGS) -c graph.c

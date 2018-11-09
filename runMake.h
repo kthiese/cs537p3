@@ -1,2 +1,5 @@
-void runMake(struct NodeList* graph);
-void run(struct Node* curr, struct NodeList* visited);
+// Alec Scheele
+// Kathryn Thiese
+
+void runMake(struct NodeList* graph, char* makeTarget);
+void run(struct NodeList* graph, struct Node* curr, struct NodeList* visited);
