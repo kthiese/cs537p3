@@ -259,7 +259,6 @@ int main(int argc, char* argv[])
 	if (argc == 1) {
 		createGraph(targetList, tsize, "");
 	} else {
-		printf("ARGUMENT: %s\n", argv[1]);
 		createGraph(targetList, tsize, argv[1]);
 	}
 
