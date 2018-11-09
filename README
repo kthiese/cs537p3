@@ -1,0 +1,36 @@
+Kathryn Thiese
+Alec Scheele
+
+For this project, we had to parse a makefile and run 'make'.
+
+We split the program into three main parts:
+	1. Makefile parser: This module finds a makefile and parses it line by line,
+	deciding whether a line is a target line or a command line. It then puts
+	the information into structs that hold information for each target
+	(dependencies, commands, target name). This module will pass a linked list 
+	of target structs to the next module to create a graph, and also checks if
+	there are any arguments passed into 537make.
+
+	2. Creating the graph: This module receives a linked list of target stucts,
+	and then tries to create a graph from the list. It first checks if any 
+	targets are duplicated (exits). After that, it creates a graph by making 
+	nodes only targets, and the children of these nodes are dependencies that 
+	are also targets. So the graph literally a linked list of all the targets
+	with pointers from each target node to each of their children (also target
+	nodes in the graph). Before going further, we first check for cycles.
+
+	3. Running the makefile: The module receives the created graph and a target
+	name if it was passed into 537make. It starts the graph traversing from that
+	node, or from the head node if nothing was passed in 537make. For running
+	the makefile, we perform a sort of DFS traverse through the graph. For 
+	running a command, we fork anotehr process, and have the parent process wait
+	for the command to finish. 
+
+Other than these three parts, we also have the header files for each module and 
+for the graph. The structs we created were for the commands (command file and the
+arguments), a target (target name, dependencies, and command structs), a node (a 
+target struct, a next node, and a list of children), and lastly, a NodeList struct
+(head, size of list).
+
+We divided the program into the three main modules because we believed those were the 
+most independent from each other. 
